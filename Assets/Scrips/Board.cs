@@ -2,9 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum Square { empty, fill }
 public class Board : MonoBehaviour
 {
-    public enum Square { empty, fill }
     Square[,] matrixBoard = new Square[8, 8];
     Square[,] matrixInsert = new Square[4, 4];
     Square[,] matrixInsert2x2 = new Square[2, 2];
@@ -44,7 +44,7 @@ public class Board : MonoBehaviour
         }
     }
 
-    bool IsCanPutSquareIntoBoard(Square square, int x, int y)
+    public bool IsCanPutSquareIntoBoard(Square square, int x, int y)
     {
         if (x < matrixBoard.GetLength(0) && x >= 0 && y < matrixBoard.GetLength(1) && y >= 0)
         {
@@ -63,7 +63,7 @@ public class Board : MonoBehaviour
         return false;
     }
 
-    bool IsCanPutInsertIntoBoard(Square[,] insert, int x, int y)
+    public bool IsCanPutInsertIntoBoard(Square[,] insert, int x, int y)
     {
         for (int i = 0; i < insert.GetLength(0); i++)
         {
@@ -78,14 +78,14 @@ public class Board : MonoBehaviour
         return true;
     }
 
-    void PutSquareIntoBoard(Square square, int x, int y)
+    public void PutSquareIntoBoard(Square square, int x, int y)
     {
         if (x < matrixBoard.GetLength(0) && x >= 0 && y < matrixBoard.GetLength(1) && y >= 0)
         {
             matrixBoard[x, y] = square;
         }
     }
-    void PutInsertIntoBoard(Square[,] insert, int x, int y)
+    public void PutInsertIntoBoard(Square[,] insert, int x, int y)
     {
         for (int i = 0; i < insert.GetLength(0); i++)
         {
