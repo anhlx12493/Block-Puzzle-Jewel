@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,7 +11,7 @@ public class Insert : MonoBehaviour
     public int width, height;
     GameObject shadowParent;
     GameObject[,] shadow;
-    Vector2 square0x0Board;
+    Vector2 square0x0Board, startPos;
     int originX, originY;
     [SerializeField]
     private Square[] inputMatrix;
@@ -28,6 +29,7 @@ public class Insert : MonoBehaviour
         board = FindObjectOfType<Board>();
         mainCam = Camera.main;
         CreateInsertAndShadow();
+        startPos = transform.position;
         square0x0Board = new Vector2(board.transform.position.x - 2.275f, board.transform.position.y + 2.275f);
     }
     void CreateInsertAndShadow()
@@ -56,6 +58,14 @@ public class Insert : MonoBehaviour
     }
     private void Update()
     {
+        PickUpAndPutInsert();
+        PutShadow();
+        CheckShadowPlacement();
+    }
+
+
+    void PickUpAndPutInsert()
+    {
         if (Input.GetMouseButtonDown(0))
         {
             if (mainCam.ScreenToWorldPoint(Input.mousePosition).x > transform.position.x - 0.325f &&
@@ -71,12 +81,24 @@ public class Insert : MonoBehaviour
         {
             isPickUpInsert = false;
             shadowParent.SetActive(false);
+            if (board.IsCanPutInsertIntoBoard(InsertMatrix, originX, originY))
+            {
+                transform.position = shadowParent.transform.position;
+            }
+            else
+            {
+                transform.position = startPos;
+            }
+            board.PutInsertIntoBoard(InsertMatrix, originX, originY);
         }
         if (isPickUpInsert)
         {
             transform.position = (Vector2)mainCam.ScreenToWorldPoint(Input.mousePosition);
             transform.position += new Vector3(0, 2);
         }
+    }
+    void PutShadow()
+    {
         int numberWidth = (int)((transform.position.x - board.transform.position.x) / 0.65f);
         int numberHeigh = (int)((transform.position.y - board.transform.position.y) / 0.65f);
         if (transform.position.x > board.transform.position.x)
@@ -101,13 +123,16 @@ public class Insert : MonoBehaviour
                 shadowParent.transform.position = new Vector3(numberWidth * 0.65f - 0.325f, numberHeigh * 0.65f - 0.325f);
             }
         }
+    }
+    void CheckShadowPlacement()
+    {
         float f1 = shadowParent.transform.position.x - square0x0Board.x;
         f1 = ((int)(f1 * 100f + (f1 > 0 ? 0.5f : -0.5)) / 100f);
         float f2 = shadowParent.transform.position.y - square0x0Board.y;
         f2 = ((int)(f2 * 100f + (f2 > 0 ? 0.5f : -0.5)) / 100f);
         originX = (int)(f1 / 0.65f);
         originY = -(int)(f2 / 0.65f);
-        for (int  y = 0,x; y < height; y++)
+        for (int y = 0, x; y < height; y++)
         {
             for (x = 0; x < width; x++)
             {

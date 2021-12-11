@@ -6,9 +6,6 @@ public enum Square { empty, fill }
 public class Board : MonoBehaviour
 {
     Square[,] matrixBoard = new Square[8, 8];
-    Square[,] matrixInsert = new Square[4, 4];
-    Square[,] matrixInsert2x2 = new Square[2, 2];
-    Square[,] matrixInsertN = new Square[3, 2];
     private void Start()
     {
         ClearMatrixBoard();
@@ -20,26 +17,6 @@ public class Board : MonoBehaviour
             for (int y = 0; y < 8; y++)
             {
                 matrixBoard[x, y] = Square.empty;
-            }
-        }
-    }
-    void createInsert2x2()
-    {
-        for (int x = 0; x < 2; x++)
-        {
-            for (int y = 0; y < 2; y++)
-            {
-                matrixInsert2x2[x, y] = Square.fill;
-            }
-        }
-    }
-    void createInsertN()
-    {
-        for (int x = 0; x < 3; x++)
-        {
-            for (int y = 0; y < 2; y++)
-            {
-                matrixInsertN[x, y] = Square.fill;
             }
         }
     }
