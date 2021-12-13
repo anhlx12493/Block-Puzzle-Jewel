@@ -5,12 +5,14 @@ using UnityEngine;
 
 public class Insert : MonoBehaviour
 {
-    Camera mainCam;
-    Board board;
-    bool isPickUpInsert;
+    [HideInInspector]public Board board;
+    public float numberCorrespondingToInsert;
     public int width, height;
+    Camera mainCam;
+    bool isPickUpInsert, isUsedInsert;
     GameObject shadowParent;
     GameObject[,] shadow;
+    GameObject[,] insertGO;
     Vector2 square0x0Board, startPos;
     int originX, originY;
     [SerializeField]
@@ -26,8 +28,10 @@ public class Insert : MonoBehaviour
     }
     private void Awake()
     {
-        board = FindObjectOfType<Board>();
         mainCam = Camera.main;
+    }
+    private void Start()
+    {
         CreateInsertAndShadow();
         startPos = transform.position;
         square0x0Board = new Vector2(board.transform.position.x - 2.275f, board.transform.position.y + 2.275f);
@@ -39,6 +43,7 @@ public class Insert : MonoBehaviour
         shadowParent.SetActive(false);
         _insertMatrix = new Square[width, height];
         shadow = new GameObject[width, height];
+        insertGO = new GameObject[width, height];
         for (int x = 0, y; x < width; x++)
         {
             for (y = 0; y < height; y++)
@@ -48,6 +53,7 @@ public class Insert : MonoBehaviour
                 {
                     gO = Instantiate(PrefabsManager.PrefabBLock, transform);
                     gO.transform.localPosition = new Vector3(x * 0.65f, -y * 0.65f);
+                    insertGO[x, y] = gO;
                     gO = Instantiate(PrefabsManager.PrefabBLockShadow, shadowParent.transform);
                     gO.GetComponent<SpriteRenderer>().color -= new Color(0, 0, 0, 0.8f);
                     gO.transform.localPosition = new Vector3(x * 0.65f, -y * 0.65f);
@@ -58,38 +64,84 @@ public class Insert : MonoBehaviour
     }
     private void Update()
     {
-        PickUpAndPutInsert();
-        PutShadow();
-        CheckShadowPlacement();
+        if (!isUsedInsert)
+        {
+            PickUpAndPutInsert();
+            PutShadow();
+            CheckShadowPlacement();
+        }
+        else
+        {
+            DestroyInsert();
+        }
     }
 
+    void DestroyInsert()
+    {
+        Destroy(shadowParent);
+        Destroy(gameObject);
+    }
 
     void PickUpAndPutInsert()
     {
-        if (Input.GetMouseButtonDown(0))
+        if (mainCam.ScreenToWorldPoint(Input.mousePosition).x > transform.position.x - 0.325f &&
+            mainCam.ScreenToWorldPoint(Input.mousePosition).x < (transform.position.x + 0.325f) + width * 0.65f &&
+            mainCam.ScreenToWorldPoint(Input.mousePosition).y < transform.position.y + 0.325f &&
+            mainCam.ScreenToWorldPoint(Input.mousePosition).y > (transform.position.y + 0.325f) - height * 0.65f)
         {
-            if (mainCam.ScreenToWorldPoint(Input.mousePosition).x > transform.position.x - 0.325f &&
-                mainCam.ScreenToWorldPoint(Input.mousePosition).x < (transform.position.x + 0.325f) + width * 0.65f &&
-                mainCam.ScreenToWorldPoint(Input.mousePosition).y < transform.position.y + 0.325f &&
-                mainCam.ScreenToWorldPoint(Input.mousePosition).y > (transform.position.y + 0.325f) - height * 0.65f)
+            if (Input.GetMouseButtonDown(0))
             {
                 isPickUpInsert = true;
                 shadowParent.SetActive(true);
             }
         }
-        if (Input.GetMouseButtonUp(0))
+        if (isPickUpInsert)
         {
-            isPickUpInsert = false;
-            shadowParent.SetActive(false);
-            if (board.IsCanPutInsertIntoBoard(InsertMatrix, originX, originY))
+            if (Input.GetMouseButtonUp(0))
             {
-                transform.position = shadowParent.transform.position;
+                isPickUpInsert = false;
+                shadowParent.SetActive(false);
+                if (board.IsCanPutInsertIntoBoard(InsertMatrix, originX, originY))
+                {
+                    transform.position = shadowParent.transform.position;
+                    board.PutInsertIntoBoard(InsertMatrix, originX, originY);
+                    board.PutInsertGOIntoBoard(insertGO, originX, originY);
+                    for(int x = 0; x < InsertMatrix.GetLength(0); x++)
+                    {
+                        if (board.CheckHeightBoard(x + originX))
+                        {
+                            board.ClearHeightBLocks(x + originX);
+                        }
+                    }
+                    for(int y = 0; y < InsertMatrix.GetLength(1); y++)
+                    {
+                        if (board.CheckWidthBoard(y + originY))
+                        {
+                            board.ClearWidthBLocks(y + originY);
+                        }
+                    }
+                    List<Transform> transforms = new List<Transform>();
+                    transforms.AddRange(GetComponentsInChildren<Transform>());
+                    transforms.Remove(transform);
+                    for (int x = 0; x < transforms.Count; x++)
+                    {
+                        transforms[x].parent = board.transform;
+                    }
+                    isUsedInsert = true;
+
+
+                    board.numberInsertAreWaitting--;
+                    if (board.numberInsertAreWaitting == 0)
+                    {
+                        board.CreateNewInsert();
+                    }
+                    Debug.Log(board.numberInsertAreWaitting);
+                }
+                else
+                {
+                    transform.position = startPos;
+                }
             }
-            else
-            {
-                transform.position = startPos;
-            }
-            board.PutInsertIntoBoard(InsertMatrix, originX, originY);
         }
         if (isPickUpInsert)
         {
