@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7717875980931183806}
   - component: {fileID: 7717875980931183745}
+  - component: {fileID: -6707896735004924261}
   m_Layer: 0
   m_Name: I2x1
   m_TagString: Untagged
@@ -43,7 +44,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4bc1a1decd5cd914d89c6861e0f9636f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  board: {fileID: 0}
   numberCorrespondingToInsert: 1
   width: 2
   height: 1
+  canPut: 0
   inputMatrix: 0100000001000000
+--- !u!210 &-6707896735004924261
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7717875980931183744}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 1

@@ -15,6 +15,7 @@ public class Insert : MonoBehaviour
     GameObject[,] insertGO;
     Vector2 square0x0Board, startPos;
     int originX, originY;
+    [HideInInspector] public bool canPut;
     [SerializeField]
     private Square[] inputMatrix;
 
@@ -35,6 +36,15 @@ public class Insert : MonoBehaviour
         CreateInsertAndShadow();
         startPos = transform.position;
         square0x0Board = new Vector2(board.transform.position.x - 2.275f, board.transform.position.y + 2.275f);
+
+        if (board.CheckInsertCanPut(InsertMatrix))
+        {
+            canPut = true;
+        }
+        else
+        {
+            canPut = false;
+        }
     }
     void CreateInsertAndShadow()
     {
@@ -44,6 +54,7 @@ public class Insert : MonoBehaviour
         _insertMatrix = new Square[width, height];
         shadow = new GameObject[width, height];
         insertGO = new GameObject[width, height];
+        Sprite color = UIManager.Instance.insertColor[UnityEngine.Random.Range(0, UIManager.Instance.insertColor.Length)];
         for (int x = 0, y; x < width; x++)
         {
             for (y = 0; y < height; y++)
@@ -53,6 +64,7 @@ public class Insert : MonoBehaviour
                 {
                     gO = Instantiate(PrefabsManager.PrefabBLock, transform);
                     gO.transform.localPosition = new Vector3(x * 0.65f, -y * 0.65f);
+                    gO.GetComponent<SpriteRenderer>().sprite = color;
                     insertGO[x, y] = gO;
                     gO = Instantiate(PrefabsManager.PrefabBLockShadow, shadowParent.transform);
                     gO.GetComponent<SpriteRenderer>().color -= new Color(0, 0, 0, 0.8f);
@@ -84,62 +96,66 @@ public class Insert : MonoBehaviour
 
     void PickUpAndPutInsert()
     {
-        if (mainCam.ScreenToWorldPoint(Input.mousePosition).x > transform.position.x - 0.325f &&
-            mainCam.ScreenToWorldPoint(Input.mousePosition).x < (transform.position.x + 0.325f) + width * 0.65f &&
-            mainCam.ScreenToWorldPoint(Input.mousePosition).y < transform.position.y + 0.325f &&
-            mainCam.ScreenToWorldPoint(Input.mousePosition).y > (transform.position.y + 0.325f) - height * 0.65f)
+        if (canPut)
         {
-            if (Input.GetMouseButtonDown(0))
+            if (mainCam.ScreenToWorldPoint(Input.mousePosition).x > transform.position.x - 0.5f &&
+                mainCam.ScreenToWorldPoint(Input.mousePosition).x < transform.position.x + 1.5f &&
+                mainCam.ScreenToWorldPoint(Input.mousePosition).y < transform.position.y + 0.5f &&
+                mainCam.ScreenToWorldPoint(Input.mousePosition).y > transform.position.y - 1.5f)
             {
-                isPickUpInsert = true;
-                shadowParent.SetActive(true);
-            }
-        }
-        if (isPickUpInsert)
-        {
-            if (Input.GetMouseButtonUp(0))
-            {
-                isPickUpInsert = false;
-                shadowParent.SetActive(false);
-                if (board.IsCanPutInsertIntoBoard(InsertMatrix, originX, originY))
+                if (Input.GetMouseButtonDown(0))
                 {
-                    transform.position = shadowParent.transform.position;
-                    board.PutInsertIntoBoard(InsertMatrix, originX, originY);
-                    board.PutInsertGOIntoBoard(insertGO, originX, originY);
-                    for(int x = 0; x < InsertMatrix.GetLength(0); x++)
-                    {
-                        if (board.CheckHeightBoard(x + originX))
-                        {
-                            board.ClearHeightBLocks(x + originX);
-                        }
-                    }
-                    for(int y = 0; y < InsertMatrix.GetLength(1); y++)
-                    {
-                        if (board.CheckWidthBoard(y + originY))
-                        {
-                            board.ClearWidthBLocks(y + originY);
-                        }
-                    }
-                    List<Transform> transforms = new List<Transform>();
-                    transforms.AddRange(GetComponentsInChildren<Transform>());
-                    transforms.Remove(transform);
-                    for (int x = 0; x < transforms.Count; x++)
-                    {
-                        transforms[x].parent = board.transform;
-                    }
-                    isUsedInsert = true;
-
-
-                    board.numberInsertAreWaitting--;
-                    if (board.numberInsertAreWaitting == 0)
-                    {
-                        board.CreateNewInsert();
-                    }
-                    Debug.Log(board.numberInsertAreWaitting);
+                    isPickUpInsert = true;
+                    shadowParent.SetActive(true);
                 }
-                else
+            }
+            if (isPickUpInsert)
+            {
+                if (Input.GetMouseButtonUp(0))
                 {
-                    transform.position = startPos;
+                    isPickUpInsert = false;
+                    shadowParent.SetActive(false);
+                    if (board.IsCanPutInsertIntoBoard(InsertMatrix, originX, originY))
+                    {
+                        transform.position = shadowParent.transform.position;
+                        board.PutInsertIntoBoard(InsertMatrix, originX, originY);
+                        board.PutInsertGOIntoBoard(insertGO, originX, originY);
+                        board.insertAreWaitting.Remove(this);
+                        for (int x = 0; x < InsertMatrix.GetLength(0); x++)
+                        {
+                            if (board.CheckHeightBoard(x + originX))
+                            {
+                                board.ClearHeightBLocks(x + originX);
+                            }
+                        }
+                        for (int y = 0; y < InsertMatrix.GetLength(1); y++)
+                        {
+                            if (board.CheckWidthBoard(y + originY))
+                            {
+                                board.ClearWidthBLocks(y + originY);
+                            }
+                        }
+                        List<Transform> transforms = new List<Transform>();
+                        transforms.AddRange(GetComponentsInChildren<Transform>());
+                        transforms.Remove(transform);
+                        for (int x = 0; x < transforms.Count; x++)
+                        {
+                            transforms[x].parent = board.transform;
+                        }
+                        isUsedInsert = true;
+
+
+                        board.numberInsertAreWaitting--;
+                        if (board.numberInsertAreWaitting == 0)
+                        {
+                            board.CreateNewInsert();
+                        }
+
+                    }
+                    else
+                    {
+                        transform.position = startPos;
+                    }
                 }
             }
         }
@@ -147,6 +163,11 @@ public class Insert : MonoBehaviour
         {
             transform.position = (Vector2)mainCam.ScreenToWorldPoint(Input.mousePosition);
             transform.position += new Vector3(0, 2);
+            transform.localScale = new Vector3(1f, 1f);
+        }
+        else
+        {
+            transform.localScale = new Vector3(0.5f, 0.5f);
         }
     }
     void PutShadow()
@@ -190,7 +211,15 @@ public class Insert : MonoBehaviour
             {
                 if (shadow[x, y])
                 {
-                    if (board.IsCanPutSquareIntoBoard(InsertMatrix[x, y], originX + x, originY + y))
+                    //if (board.IsCanPutSquareIntoBoard(InsertMatrix[x, y], originX + x, originY + y))
+                    //{
+                    //    shadow[x, y].SetActive(true);
+                    //}
+                    //else
+                    //{
+                    //    shadow[x, y].SetActive(false);
+                    //}
+                    if (board.IsCanPutInsertIntoBoard(InsertMatrix, originX, originY))
                     {
                         shadow[x, y].SetActive(true);
                     }
