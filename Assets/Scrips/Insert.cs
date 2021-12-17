@@ -36,7 +36,6 @@ public class Insert : MonoBehaviour
         CreateInsertAndShadow();
         startPos = transform.position;
         square0x0Board = new Vector2(board.transform.position.x - 2.275f, board.transform.position.y + 2.275f);
-
         if (board.CheckInsertCanPut(InsertMatrix))
         {
             canPut = true;
@@ -73,6 +72,14 @@ public class Insert : MonoBehaviour
                 }
             }
         }
+        if (insertGO.GetLength(0) % 2 == 0)
+        {
+            transform.position -= new Vector3(0.325f * insertGO.GetLength(0) / 2, 0);
+        }
+        else
+        {
+            transform.position -= new Vector3(0.325f * (insertGO.GetLength(0) - 1) / 2, 0);
+        }
     }
     private void Update()
     {
@@ -99,7 +106,7 @@ public class Insert : MonoBehaviour
         if (canPut)
         {
             if (mainCam.ScreenToWorldPoint(Input.mousePosition).x > transform.position.x - 0.5f &&
-                mainCam.ScreenToWorldPoint(Input.mousePosition).x < transform.position.x + 1.5f &&
+                mainCam.ScreenToWorldPoint(Input.mousePosition).x < transform.position.x + 1.3f &&
                 mainCam.ScreenToWorldPoint(Input.mousePosition).y < transform.position.y + 0.5f &&
                 mainCam.ScreenToWorldPoint(Input.mousePosition).y > transform.position.y - 1.5f)
             {
@@ -121,20 +128,41 @@ public class Insert : MonoBehaviour
                         board.PutInsertIntoBoard(InsertMatrix, originX, originY);
                         board.PutInsertGOIntoBoard(insertGO, originX, originY);
                         board.insertAreWaitting.Remove(this);
+                        Square[,] squareClear = new Square[8, 8];
+                        GameObject[,] squareGoClear = new GameObject[8, 8];
                         for (int x = 0; x < InsertMatrix.GetLength(0); x++)
                         {
-                            if (board.CheckHeightBoard(x + originX))
+                            if (board.CheckHeightBoard(board.matrixBoard, x + originX))
                             {
-                                board.ClearHeightBLocks(x + originX);
+                                //board.ClearHeightBLocks(x + originX);
+                                board.ListClearHeightBLocks(squareClear, squareGoClear, x + originX);
                             }
                         }
                         for (int y = 0; y < InsertMatrix.GetLength(1); y++)
                         {
-                            if (board.CheckWidthBoard(y + originY))
+                            if (board.CheckWidthBoard(board.matrixBoard, y + originY))
                             {
-                                board.ClearWidthBLocks(y + originY);
+                                //board.ClearWidthBLocks(y + originY);
+                                board.ListClearWidthBLocks(squareClear, squareGoClear, y + originY);
                             }
                         }
+                        for (int x = 0; x < InsertMatrix.GetLength(0); x++)
+                        {
+                            if (board.CheckHeightBoard(squareClear, x + originX))
+                            {
+                                board.ClearHeightBLocks(board.matrixBoard, x + originX);
+                                board.ClearHeightBlockGO(squareGoClear, x + originX);
+                            }
+                        }
+                        for (int y = 0; y < InsertMatrix.GetLength(1); y++)
+                        {
+                            if (board.CheckWidthBoard(squareClear, y + originY))
+                            {
+                                board.ClearWidthBLocks(board.matrixBoard, y + originY);
+                                board.ClearWidthBlockGO(squareGoClear, y + originY);
+                            }
+                        }
+                        UpScore();
                         List<Transform> transforms = new List<Transform>();
                         transforms.AddRange(GetComponentsInChildren<Transform>());
                         transforms.Remove(transform);
@@ -162,7 +190,14 @@ public class Insert : MonoBehaviour
         if (isPickUpInsert)
         {
             transform.position = (Vector2)mainCam.ScreenToWorldPoint(Input.mousePosition);
-            transform.position += new Vector3(0, 2);
+            if (insertGO.GetLength(0) % 2 == 0)
+            {
+                transform.position -= new Vector3(0.65f * insertGO.GetLength(0) / 2, -2);
+            }
+            else
+            {
+                transform.position -= new Vector3(0.65f * (insertGO.GetLength(0) - 1) / 2, -2);
+            }
             transform.localScale = new Vector3(1f, 1f);
         }
         else
@@ -227,6 +262,19 @@ public class Insert : MonoBehaviour
                     {
                         shadow[x, y].SetActive(false);
                     }
+                }
+            }
+        }
+    }
+    void UpScore()
+    {
+        for(int i = 0; i < InsertMatrix.GetLength(0); i++)
+        {
+            for(int k = 0; k < InsertMatrix.GetLength(1); k++)
+            {
+                if (InsertMatrix[i, k] == Square.fill)
+                {
+                    GameplayManager.Instance.UpdateScore();
                 }
             }
         }

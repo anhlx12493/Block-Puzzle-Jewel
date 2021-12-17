@@ -43,7 +43,7 @@ public class Board : MonoBehaviour
                 {
                     gO = Instantiate(inserts[x].gameObject);
                     gO.GetComponent<Insert>().board = this;
-                    gO.transform.position = new Vector3(firstInsertPos.x + i * 1.8f , firstInsertPos.y);
+                    gO.transform.position = new Vector3(firstInsertPos.x + i * 2f , firstInsertPos.y);
                     insertAreWaitting.Add(gO.GetComponent<Insert>());
                 }
                 inclusive += inserts[x].numberCorrespondingToInsert;
@@ -135,48 +135,65 @@ public class Board : MonoBehaviour
             }
         }
     }
-    public bool CheckWidthBoard(int y)
+    public bool CheckWidthBoard(Square[,] board, int y)
     {
         for (int x = 0; x < matrixBoard.GetLength(0); x++)
         {
-            if (matrixBoard[x, y] == Square.empty)
+            if (board[x, y] == Square.empty)
             {
                 return false;
             }
         }
         return true;
     }
-    public bool CheckHeightBoard(int x)
+    public bool CheckHeightBoard(Square[,] board, int x)
     {
         for (int y = 0; y < matrixBoard.GetLength(1); y++)
         {
-            if(matrixBoard[x, y] == Square.empty)
+            if(board[x, y] == Square.empty)
             {
                 return false;
             }
         }
         return true;
     }
-    public void ClearWidthBLocks(int y)
+    public void ClearWidthBLocks(Square[,] squares, int y)
     {
         for (int x = 0; x < matrixBoard.GetLength(0); x++)
         {
-            if (matrixBoard[x, y] == Square.fill)
+            if (squares[x, y] == Square.fill)
             {
                 matrixBoard[x, y] = Square.empty;
-                Destroy(matrixBoardGO[x, y]);
             }
         }
     }
-    public void ClearHeightBLocks(int x)
+    public void ClearHeightBLocks(Square[,] squares, int x)
     {
         for (int y = 0; y < matrixBoard.GetLength(1); y++)
         {
-            if (matrixBoard[x, y] == Square.fill)
+            if (squares[x, y] == Square.fill)
             {
                 matrixBoard[x, y] = Square.empty;
-                Destroy(matrixBoardGO[x, y]);
             }
+        }
+    }
+    IEnumerator DestroySquare(GameObject square, float time)
+    {
+        yield return new WaitForSeconds(time);
+        while (true)
+        {
+            if (square == null)
+            {
+                yield break;
+            }
+            square.transform.localScale -= new Vector3(0.02f, 0.02f);
+            if (square.transform.localScale.x <= 0)
+            {
+                GameplayManager.Instance.UpdateScore();
+                Destroy(square);
+                break;
+            }
+            yield return new WaitForSeconds(0.02f);
         }
     }
     public bool CheckGameOver()
@@ -205,6 +222,56 @@ public class Board : MonoBehaviour
         }
         return false;
     }
+    public void ListClearWidthBLocks(Square[,] squares, GameObject[,] gOs, int y)
+    {
+        for (int x = 0; x < matrixBoard.GetLength(0); x++)
+        {
+            if (matrixBoard[x, y] == Square.fill)
+            {
+                squares[x, y] = Square.fill;
+                gOs[x, y] = matrixBoardGO[x, y];
+            }
+        }
+    }
+    public void ListClearHeightBLocks(Square[,] squares, GameObject[,] gOs, int x)
+    {
+        for (int y = 0; y < matrixBoard.GetLength(1); y++)
+        {
+            if (matrixBoard[x, y] == Square.fill)
+            {
+                squares[x, y] = Square.fill;
+                gOs[x, y] = matrixBoardGO[x, y];
+            }
+        }
+    }
+    public void ClearWidthBlockGO(GameObject[,] gOs, int y)
+    {
+        for(int x = 0; x <= 4; x++)
+        {
+            if(gOs[4 - x, y] != null)
+            {
+                StartCoroutine(DestroySquare(gOs[4 - x, y], 0.1f * x));
+            }
+            if(gOs[3 + x, y] != null)
+            {
+                StartCoroutine(DestroySquare(gOs[3 + x, y], 0.1f * x));
+            }
+        }
+    }
+    public void ClearHeightBlockGO(GameObject[,] gOs, int x)
+    {
+        for(int y = 0; y <= 4; y++)
+        {
+            if(gOs[x, 4 - y] != null)
+            {
+                StartCoroutine(DestroySquare(gOs[x, 4 - y], 0.1f * y));
+            }
+            if(gOs[x, 3 + y] != null)
+            {
+                StartCoroutine(DestroySquare(gOs[x, 3 + y], 0.1f * y));
+            }
+        }
+    }
     private void Update()
     {
         if (insertAreWaitting.Count != remanningInsert)
@@ -225,10 +292,10 @@ public class Board : MonoBehaviour
             {
                 remanningInsert = insertAreWaitting.Count;
             }
-        }
-        if (CheckGameOver())
-        {
-            Debug.Log("GameOver");
+            if (CheckGameOver())
+            {
+                GameplayManager.Instance.Onlose();
+            }
         }
     }
 }
