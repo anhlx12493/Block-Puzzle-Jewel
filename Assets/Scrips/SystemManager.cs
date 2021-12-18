@@ -12,10 +12,32 @@ public class SystemManager : MonoBehaviour
             return _instance;
         }
     }
+    private int _bestScore;
+    public int BestScore
+    {
+        get
+        {
+            _bestScore = PlayerPrefs.GetInt("BestScore");
+            return _bestScore;
+        }
+        set
+        {
+            _bestScore = value;
+            PlayerPrefs.SetInt("BestScore", value);
+        }
+    }
+
 
     [RuntimeInitializeOnLoadMethod]
     static void OnLoad()
     {
         _instance = new SystemManager();
+    }
+    public SystemManager()
+    {
+        AdManager.AddAd(new AdAdmob());
+        GameObject go = new GameObject("AdManager");
+        go.AddComponent<AdManager>();
+        Object.DontDestroyOnLoad(go);
     }
 }

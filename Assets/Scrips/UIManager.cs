@@ -8,6 +8,7 @@ public class UIManager : MonoBehaviour
 {
     public static UIManager Instance;
     [SerializeField] Button PauseButton;
+    public Text ScoreText, BestScore;
     public Sprite[] insertColor;
     private void Awake()
     {

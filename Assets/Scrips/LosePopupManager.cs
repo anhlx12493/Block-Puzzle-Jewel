@@ -16,6 +16,10 @@ public class LosePopupManager : MonoBehaviour
 
     void RestartGame()
     {
-        UnityEngine.SceneManagement.SceneManager.LoadScene("Gameplay");
+        Action action = () =>
+        {
+            UnityEngine.SceneManagement.SceneManager.LoadScene("Gameplay");
+        };
+        AdManager.ShowInter(action);
     }
 }

@@ -1,14 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class GameplayManager : MonoBehaviour
 {
     public static GameplayManager Instance;
     public LosePopupManager losePopup;
-    [SerializeField] Text ScoreText;
-    int Score = 0;
+    int score = 0;
     private void Awake()
     {
         if (Instance == null)
@@ -20,14 +18,22 @@ public class GameplayManager : MonoBehaviour
             Destroy(gameObject);
         }
     }
-
+    private void Start()
+    {
+        UIManager.Instance.BestScore.text = SystemManager.Instance.BestScore.ToString();
+    }
     public void Onlose()
     {
         losePopup.gameObject.SetActive(true);
+        if (score > SystemManager.Instance.BestScore)
+        {
+            SystemManager.Instance.BestScore = score;
+            UIManager.Instance.BestScore.text = SystemManager.Instance.BestScore.ToString();
+        }
     }
     public void UpdateScore()
     {
-        Score++;
-        ScoreText.text = Score + "";
+        score++;
+        UIManager.Instance.ScoreText.text = score.ToString();
     }
 }

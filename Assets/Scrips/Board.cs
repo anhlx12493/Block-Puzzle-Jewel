@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -34,7 +35,7 @@ public class Board : MonoBehaviour
         }
         for (int i = 0; i < 3; i++)
         {
-            numberRandom = Random.Range(0f, maxInclusive);
+            numberRandom = UnityEngine.Random.Range(0f, maxInclusive);
             GameObject gO;
             inclusive = 0;
             for (int x = 0; x < inserts.Length; x++)
@@ -294,7 +295,11 @@ public class Board : MonoBehaviour
             }
             if (CheckGameOver())
             {
-                GameplayManager.Instance.Onlose();
+                Action action = () =>
+                {
+                    GameplayManager.Instance.Onlose();
+                };
+                AdManager.ShowVideo(action, null, null);
             }
         }
     }
