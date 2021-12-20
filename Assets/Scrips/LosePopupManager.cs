@@ -18,6 +18,8 @@ public class LosePopupManager : MonoBehaviour
     {
         Action action = () =>
         {
+            PlayerPrefs.DeleteKey("SaveGame");
+            SystemManager.Instance.SaveGame = null;
             UnityEngine.SceneManagement.SceneManager.LoadScene("Gameplay");
         };
         AdManager.ShowInter(action);

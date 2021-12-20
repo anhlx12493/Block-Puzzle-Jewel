@@ -11,19 +11,29 @@ public class Board : MonoBehaviour
     [HideInInspector] public List<Insert> insertAreWaitting = new List<Insert>();
     [HideInInspector] public Square[,] matrixBoard = new Square[8, 8];
     GameObject[,] matrixBoardGO = new GameObject[8, 8];
+    int[,] matrixColor = new int[8, 8];
     float numberRandom;
     Vector2 firstInsertPos = new Vector2(-2f, -3.5f);
+    Vector2 square0x0Board;
     float maxInclusive=0;
     float inclusive;
     
     private void Awake()
     {
-        CreateNewInsert();
+        square0x0Board = new Vector2(transform.position.x - 2.275f, transform.position.y + 2.275f);
     }
     private void Start()
     {
-        ClearMatrixBoard();
-        remanningInsert = insertAreWaitting.Count;
+        if (SystemManager.Instance.SaveGame != null)
+        {
+            Continue();
+        }
+        else
+        {
+            ClearMatrixBoard();
+            CreateNewInsert();
+            remanningInsert = insertAreWaitting.Count;
+        }
     }
     public void CreateNewInsert()
     {
@@ -44,6 +54,7 @@ public class Board : MonoBehaviour
                 {
                     gO = Instantiate(inserts[x].gameObject);
                     gO.GetComponent<Insert>().board = this;
+                    gO.GetComponent<Insert>().createPos = new Vector3(firstInsertPos.x + i * 2f, firstInsertPos.y);
                     gO.transform.position = new Vector3(firstInsertPos.x + i * 2f , firstInsertPos.y);
                     insertAreWaitting.Add(gO.GetComponent<Insert>());
                 }
@@ -104,6 +115,23 @@ public class Board : MonoBehaviour
             {
                 matrixBoard[x, y] = square;
             }
+        }
+    }
+    public void PutInsertColorIntoBoard(int[,] numColor, int x, int y)
+    {
+        for (int i = 0; i < numColor.GetLength(0); i++)
+        {
+            for (int k = 0; k < numColor.GetLength(1); k++)
+            {
+                PutColorIntoBoard(numColor[i, k], x + i, y + k);
+            }
+        }
+    }
+    public void PutColorIntoBoard(int numColor, int x, int y)
+    {
+        if (x < matrixBoard.GetLength(0) && x >= 0 && y < matrixBoard.GetLength(1) && y >= 0)
+        {
+            matrixColor[x, y] = numColor;
         }
     }
     public void PutInsertIntoBoard(Square[,] insert, int x, int y)
@@ -301,6 +329,88 @@ public class Board : MonoBehaviour
                 };
                 AdManager.ShowVideo(action, null, null);
             }
+        }
+    }
+
+    public void GetSaveData(ref SaveGame saveGame)
+    {
+        saveGame.matrixBoard = new Square[matrixBoard.Length];
+        for (int x = 0; x < matrixBoard.GetLength(0); x++)
+        {
+            for (int y = 0; y < matrixBoard.GetLength(1); y++)
+            {
+                saveGame.matrixBoard[y * matrixBoard.GetLength(0) + x] = matrixBoard[x, y];
+            }
+        }
+        saveGame.matrixColor = new int[matrixColor.Length];
+        for (int x = 0; x < matrixColor.GetLength(0); x++)
+        {
+            for (int y = 0; y < matrixColor.GetLength(1); y++)
+            {
+                saveGame.matrixColor[y * matrixColor.GetLength(0) + x] = matrixColor[x, y];
+            }
+        }
+        SaveInsert[] saveInserts = new SaveInsert[insertAreWaitting.Count];
+        for (int x = 0; x < insertAreWaitting.Count; x++)
+        {
+            saveInserts[x].numColor = insertAreWaitting[x].numColor;
+            saveInserts[x].width = insertAreWaitting[x].width;
+            saveInserts[x].height = insertAreWaitting[x].height;
+            saveInserts[x].positon = insertAreWaitting[x].createPos;
+            saveInserts[x].insertMatrix = new Square[insertAreWaitting[x].InsertMatrix.Length];
+            for (int i = 0; i < insertAreWaitting[x].width; i++)
+            {
+                for(int k = 0; k < insertAreWaitting[x].height; k++)
+                {
+                    saveInserts[x].insertMatrix[k * insertAreWaitting[x].width + i] = insertAreWaitting[x].InsertMatrix[i, k];
+                }
+            }
+        }
+        saveGame.inserts = saveInserts;
+        saveGame.numberInsertAreWaitting = numberInsertAreWaitting;
+        saveGame.remanningInsert = remanningInsert;
+        saveGame.score = GameplayManager.Instance.score;
+    }
+
+    void Continue()
+    {
+        SaveGame saveGame = SystemManager.Instance.SaveGame.Value;
+        GameplayManager.Instance.score = saveGame.score;
+        for (int x = 0; x < matrixBoard.GetLength(0); x++)
+        {
+            for (int y = 0; y < matrixBoard.GetLength(1); y++)
+            {
+                matrixBoard[x, y] = saveGame.matrixBoard[y * matrixBoard.GetLength(0) + x];
+                if (matrixBoard[x, y] == Square.fill)
+                {
+                    matrixBoardGO[x, y] = Instantiate(PrefabsManager.PrefabBLock, transform);
+                    matrixBoardGO[x, y].transform.position = new Vector3(square0x0Board.x + x * 0.65f, square0x0Board.y - y * 0.65f);
+                    Sprite color = UIManager.Instance.insertColor[saveGame.matrixColor[y * matrixColor.GetLength(0) + x]];
+                    matrixColor[x, y] = saveGame.matrixColor[y * matrixColor.GetLength(0) + x];
+                    matrixBoardGO[x, y].GetComponent<SpriteRenderer>().sprite = color;
+                }
+            }
+        }
+        numberInsertAreWaitting = saveGame.numberInsertAreWaitting;
+        remanningInsert = saveGame.remanningInsert;
+        Insert insert;
+        GameObject go;
+        for (int x = 0; x < saveGame.inserts.Length; x++)
+        {
+            go = new GameObject();
+            insert = go.AddComponent<Insert>();
+            insert.board = this;
+            insert.width = saveGame.inserts[x].width;
+            insert.height = saveGame.inserts[x].height;
+            insert.inputMatrix = new Square[insert.width*insert.height];
+            for (int i = 0; i < saveGame.inserts[x].insertMatrix.Length; i++)
+            {
+                insert.inputMatrix[i] = saveGame.inserts[x].insertMatrix[i];
+            }
+            insert.numColor = saveGame.inserts[x].numColor;
+            insert.createPos = saveGame.inserts[x].positon;
+            insertAreWaitting.Add(insert);
+            go.transform.position = saveGame.inserts[x].positon;
         }
     }
 }

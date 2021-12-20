@@ -8,16 +8,20 @@ public class Insert : MonoBehaviour
     [HideInInspector]public Board board;
     public float numberCorrespondingToInsert;
     public int width, height;
+    [HideInInspector] public int numColor;
     Camera mainCam;
     bool isPickUpInsert, isUsedInsert;
     GameObject shadowParent;
     GameObject[,] shadow;
     GameObject[,] insertGO;
-    Vector2 square0x0Board, startPos;
+    int[,] insertColor;
+    Vector2 square0x0Board;
+    Vector2 startPos;
+    [HideInInspector] public Vector2 createPos;
     int originX, originY;
     [HideInInspector] public bool canPut;
     [SerializeField]
-    private Square[] inputMatrix;
+    public Square[] inputMatrix;
 
     private Square[,] _insertMatrix;
     public Square[,] InsertMatrix
@@ -30,6 +34,7 @@ public class Insert : MonoBehaviour
     private void Awake()
     {
         mainCam = Camera.main;
+        numColor = -1;
     }
     private void Start()
     {
@@ -53,7 +58,12 @@ public class Insert : MonoBehaviour
         _insertMatrix = new Square[width, height];
         shadow = new GameObject[width, height];
         insertGO = new GameObject[width, height];
-        Sprite color = UIManager.Instance.insertColor[UnityEngine.Random.Range(0, UIManager.Instance.insertColor.Length)];
+        insertColor = new int[width, height];
+        if (numColor < 0)
+        {
+            numColor = UnityEngine.Random.Range(0, UIManager.Instance.insertColor.Length);
+        }
+        Sprite color = UIManager.Instance.insertColor[numColor];
         for (int x = 0, y; x < width; x++)
         {
             for (y = 0; y < height; y++)
@@ -65,6 +75,7 @@ public class Insert : MonoBehaviour
                     gO.transform.localPosition = new Vector3(x * 0.65f, -y * 0.65f);
                     gO.GetComponent<SpriteRenderer>().sprite = color;
                     insertGO[x, y] = gO;
+                    insertColor[x, y] = numColor;
                     gO = Instantiate(PrefabsManager.PrefabBLockShadow, shadowParent.transform);
                     gO.GetComponent<SpriteRenderer>().color -= new Color(0, 0, 0, 0.8f);
                     gO.transform.localPosition = new Vector3(x * 0.65f, -y * 0.65f);
@@ -127,6 +138,7 @@ public class Insert : MonoBehaviour
                         transform.position = shadowParent.transform.position;
                         board.PutInsertIntoBoard(InsertMatrix, originX, originY);
                         board.PutInsertGOIntoBoard(insertGO, originX, originY);
+                        board.PutInsertColorIntoBoard(insertColor, originX, originY);
                         board.insertAreWaitting.Remove(this);
                         Square[,] squareClear = new Square[8, 8];
                         GameObject[,] squareGoClear = new GameObject[8, 8];
@@ -134,7 +146,6 @@ public class Insert : MonoBehaviour
                         {
                             if (board.CheckHeightBoard(board.matrixBoard, x + originX))
                             {
-                                //board.ClearHeightBLocks(x + originX);
                                 board.ListClearHeightBLocks(squareClear, squareGoClear, x + originX);
                             }
                         }
@@ -142,7 +153,6 @@ public class Insert : MonoBehaviour
                         {
                             if (board.CheckWidthBoard(board.matrixBoard, y + originY))
                             {
-                                //board.ClearWidthBLocks(y + originY);
                                 board.ListClearWidthBLocks(squareClear, squareGoClear, y + originY);
                             }
                         }
@@ -279,4 +289,12 @@ public class Insert : MonoBehaviour
             }
         }
     }
+}
+
+[Serializable]
+public struct SaveInsert
+{
+    public int width, height, numColor;
+    public Square[] insertMatrix;
+    public Vector3 positon;
 }

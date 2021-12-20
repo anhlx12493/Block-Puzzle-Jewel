@@ -6,7 +6,20 @@ public class GameplayManager : MonoBehaviour
 {
     public static GameplayManager Instance;
     public LosePopupManager losePopup;
-    int score = 0;
+    [HideInInspector] public int score = 0;
+
+    private Board _board;
+    public Board Board
+    {
+        get
+        {
+            if (!_board)
+            {
+                _board = FindObjectOfType<Board>();
+            }
+            return _board;
+        }
+    }
     private void Awake()
     {
         if (Instance == null)
