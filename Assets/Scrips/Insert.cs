@@ -78,6 +78,7 @@ public class Insert : MonoBehaviour
                     insertColor[x, y] = numColor;
                     gO = Instantiate(PrefabsManager.PrefabBLockShadow, shadowParent.transform);
                     gO.GetComponent<SpriteRenderer>().color -= new Color(0, 0, 0, 0.8f);
+                    gO.GetComponent<SpriteRenderer>().sprite = color;
                     gO.transform.localPosition = new Vector3(x * 0.65f, -y * 0.65f);
                     shadow[x, y] = gO;
                 }

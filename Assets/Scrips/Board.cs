@@ -2,10 +2,17 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public enum Square { empty, fill }
 public class Board : MonoBehaviour
 {
+    public const float START_PIECE = 2.275f;
+    public const float UNIT_PIECE = 0.65f;
+
+    [SerializeField]
+    private Transform transformParentPiecesOfBoard;
+
     [HideInInspector] public int numberInsertAreWaitting, remanningInsert;
     public Insert[] inserts;
     [HideInInspector] public List<Insert> insertAreWaitting = new List<Insert>();
@@ -20,8 +27,37 @@ public class Board : MonoBehaviour
     
     private void Awake()
     {
-        square0x0Board = new Vector2(transform.position.x - 2.275f, transform.position.y + 2.275f);
+        square0x0Board = new Vector2(transform.position.x - START_PIECE, transform.position.y + START_PIECE);
     }
+
+    private void OnValidate()
+    {
+        square0x0Board = new Vector2(transform.position.x - START_PIECE, transform.position.y + START_PIECE);
+        List<SpriteRenderer> spriteRenderer = new List<SpriteRenderer>(transformParentPiecesOfBoard.GetComponentsInChildren<SpriteRenderer>());
+        if (spriteRenderer.Count == 0)
+            return;
+        int totalPieces = 64;
+        if (spriteRenderer.Count < totalPieces)
+        {
+            spriteRenderer.Add(Instantiate(spriteRenderer[0]));
+        }
+        else
+        {
+            for (int i = totalPieces; i < spriteRenderer.Count; i++)
+            {
+                DestroyImmediate(spriteRenderer[i].gameObject);
+            }
+        }
+
+        for (int x = 0, y; x < 8; x++)
+        {
+            for (y = 0; y < 8; y++)
+            {
+                spriteRenderer[x * 8 + y].transform.position = new Vector3(square0x0Board.x + x * UNIT_PIECE, square0x0Board.y - y * UNIT_PIECE);
+            }
+        }
+    }
+
     private void Start()
     {
         if (SystemManager.Instance.SaveGame != null)
@@ -384,7 +420,7 @@ public class Board : MonoBehaviour
                 if (matrixBoard[x, y] == Square.fill)
                 {
                     matrixBoardGO[x, y] = Instantiate(PrefabsManager.PrefabBLock, transform);
-                    matrixBoardGO[x, y].transform.position = new Vector3(square0x0Board.x + x * 0.65f, square0x0Board.y - y * 0.65f);
+                    matrixBoardGO[x, y].transform.position = new Vector3(square0x0Board.x + x * UNIT_PIECE, square0x0Board.y - y * UNIT_PIECE);
                     Sprite color = UIManager.Instance.insertColor[saveGame.matrixColor[y * matrixColor.GetLength(0) + x]];
                     matrixColor[x, y] = saveGame.matrixColor[y * matrixColor.GetLength(0) + x];
                     matrixBoardGO[x, y].GetComponent<SpriteRenderer>().sprite = color;

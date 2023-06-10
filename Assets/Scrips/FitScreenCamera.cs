@@ -37,6 +37,6 @@ public class FitScreenCamera : MonoBehaviour
             mainCam.orthographicSize = 3 * height / width;
             transformTopBar.localScale = Vector3.one;
         }
-        transformTopBar.position = mainCam.WorldToScreenPoint(new Vector3(0,3.5f,0));
+        transformTopBar.position = mainCam.WorldToScreenPoint(new Vector3(0, 3.5f, 0));
     }
 }
